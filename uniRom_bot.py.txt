@@ -1,0 +1,546 @@
+import asyncio
+import logging
+from aiogram import Bot, Dispatcher, F
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.storage.memory import MemoryStorage
+
+logging.basicConfig(level=logging.INFO)
+
+BOT_TOKEN = "8887514897:AAEw2mfixb7kqzVteI7nktzAHOUqbGBjKW0"
+
+PRICES = {
+    "plastic": {
+        "name": "Пластиковые окна Akfa",
+        "base": 650000,
+        "single": 0,
+        "double": 80000,
+        "triple": 150000,
+        "mosquito": 50000,
+        "sill": 30000,
+        "install": 80000
+    },
+    "aluminum": {
+        "name": "Алюминиевые окна Akfa",
+        "base": 750000,
+        "single": 0,
+        "double": 100000,
+        "triple": 180000,
+        "mosquito": 60000,
+        "sill": 35000,
+        "install": 100000
+    },
+    "aluminum_door": {
+        "name": "Алюминиевые двери Akfa",
+        "base": 850000,
+        "single": 0,
+        "double": 120000,
+        "triple": 0,
+        "mosquito": 0,
+        "sill": 0,
+        "install": 120000
+    },
+    "plastic_door": {
+        "name": "Пластиковые двери Akfa",
+        "base": 700000,
+        "single": 0,
+        "double": 90000,
+        "triple": 160000,
+        "mosquito": 0,
+        "sill": 0,
+        "install": 90000
+    }
+}
+
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher(storage=MemoryStorage())
+
+class CalculatorState(StatesGroup):
+    waiting_type = State()
+    waiting_width = State()
+    waiting_height = State()
+    waiting_glass = State()
+    waiting_options = State()
+
+class OrderState(StatesGroup):
+    waiting_name = State()
+    waiting_phone = State()
+    waiting_address = State()
+    waiting_details = State()
+
+def main_menu():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Калькулятор стоимости", callback_data="calc")],
+        [InlineKeyboardButton(text="Каталог продукции", callback_data="catalog")],
+        [InlineKeyboardButton(text="Наши работы", callback_data="portfolio")],
+        [InlineKeyboardButton(text="Оставить заявку", callback_data="order")],
+        [InlineKeyboardButton(text="Контакты", callback_data="contacts")],
+        [InlineKeyboardButton(text="Частые вопросы", callback_data="faq")]
+    ])
+
+def calc_type_menu():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Пластиковые окна", callback_data="type_plastic")],
+        [InlineKeyboardButton(text="Алюминиевые окна", callback_data="type_aluminum")],
+        [InlineKeyboardButton(text="Пластиковые двери", callback_data="type_plastic_door")],
+        [InlineKeyboardButton(text="Алюминиевые двери", callback_data="type_aluminum_door")],
+        [InlineKeyboardButton(text="Назад", callback_data="main_menu")]
+    ])
+
+def glass_menu():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Одинарный", callback_data="glass_single")],
+        [InlineKeyboardButton(text="Двойной", callback_data="glass_double")],
+        [InlineKeyboardButton(text="Тройной", callback_data="glass_triple")],
+        [InlineKeyboardButton(text="Назад", callback_data="calc")]
+    ])
+
+def options_menu():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Москитная сетка", callback_data="opt_mosquito")],
+        [InlineKeyboardButton(text="Подоконник", callback_data="opt_sill")],
+        [InlineKeyboardButton(text="Монтаж", callback_data="opt_install")],
+        [InlineKeyboardButton(text="Готово, посчитать", callback_data="opt_done")],
+        [InlineKeyboardButton(text="Назад", callback_data="calc")]
+    ])
+
+def catalog_menu():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Пластиковые окна Akfa", callback_data="cat_plastic")],
+        [InlineKeyboardButton(text="Алюминиевые окна Akfa", callback_data="cat_aluminum")],
+        [InlineKeyboardButton(text="Двери Akfa", callback_data="cat_doors")],
+        [InlineKeyboardButton(text="Назад", callback_data="main_menu")]
+    ])
+
+def order_confirm_menu():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Подтвердить заявку", callback_data="order_confirm")],
+        [InlineKeyboardButton(text="Отменить", callback_data="main_menu")]
+    ])
+
+def back_to_main():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="В главное меню", callback_data="main_menu")]
+    ])
+
+@dp.message(Command("start"))
+async def cmd_start(message: Message):
+    welcome_text = """Ассалому алайкум!
+
+Добро пожаловать в бот uniRom
+
+Мы устанавливаем пластиковые и алюминиевые окна и двери от производителя Akfa в Навои и области.
+
+Бесплатный замер
+Гарантия 5 лет
+Рассрочка Uzum Nasiya
+Доставка и монтаж
+
+Выберите действие ниже"""
+    await message.answer(welcome_text, reply_markup=main_menu())
+
+@dp.message(Command("help"))
+async def cmd_help(message: Message):
+    help_text = """Помощь по боту:
+
+/start - Главное меню
+/calc - Калькулятор стоимости
+/order - Оставить заявку
+/contacts - Контакты
+
+Для расчета стоимости:
+1. Выберите тип конструкции
+2. Укажите размеры (ширина x высота)
+3. Выберите стеклопакет
+4. Добавьте опции (сетка, подоконник, монтаж)
+5. Получите итоговую сумму
+
+По вопросам звоните: +998 XX XXX XX XX"""
+    await message.answer(help_text)
+
+@dp.message(Command("calc"))
+async def cmd_calc(message: Message, state: FSMContext):
+    await state.set_state(CalculatorState.waiting_type)
+    await message.answer("Выберите тип конструкции:", reply_markup=calc_type_menu())
+
+@dp.message(Command("order"))
+async def cmd_order(message: Message, state: FSMContext):
+    await state.set_state(OrderState.waiting_name)
+    await message.answer("Оставить заявку\n\nВведите ваше имя:")
+
+@dp.message(Command("contacts"))
+async def cmd_contacts(message: Message):
+    contacts_text = """Наши контакты:
+
+Город: Навои, Узбекистан
+Адрес: [указать адрес]
+Телефон: +998 XX XXX XX XX
+Telegram: @username
+Режим работы: Пн-Сб 9:00-18:00
+
+Instagram: [ссылка на вашу страницу]
+Uzum Nasiya: Доступна рассрочка!"""
+    await message.answer(contacts_text, reply_markup=back_to_main())
+
+@dp.callback_query(F.data == "main_menu")
+async def process_main_menu(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await callback.message.edit_text("Главное меню\n\nВыберите действие:", reply_markup=main_menu())
+    await callback.answer()
+
+@dp.callback_query(F.data == "calc")
+async def process_calc(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(CalculatorState.waiting_type)
+    await callback.message.edit_text("Калькулятор стоимости\n\nВыберите тип конструкции:", reply_markup=calc_type_menu())
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("type_"))
+async def process_type(callback: CallbackQuery, state: FSMContext):
+    type_key = callback.data.replace("type_", "")
+    await state.update_data(construction_type=type_key)
+    await state.set_state(CalculatorState.waiting_width)
+    type_names = {
+        "plastic": "Пластиковые окна",
+        "aluminum": "Алюминиевые окна",
+        "plastic_door": "Пластиковые двери",
+        "aluminum_door": "Алюминиевые двери"
+    }
+    await callback.message.edit_text(f"Выбрано: {type_names.get(type_key, type_key)}\n\nВведите ширину в сантиметрах (например: 120):")
+    await callback.answer()
+
+@dp.message(CalculatorState.waiting_width)
+async def process_width(message: Message, state: FSMContext):
+    try:
+        width = float(message.text.replace(",", "."))
+        if width <= 0 or width > 500:
+            raise ValueError
+        await state.update_data(width=width)
+        await state.set_state(CalculatorState.waiting_height)
+        await message.answer("Введите высоту в сантиметрах (например: 150):")
+    except ValueError:
+        await message.answer("Введите корректное число (ширина в см, например: 120)")
+
+@dp.message(CalculatorState.waiting_height)
+async def process_height(message: Message, state: FSMContext):
+    try:
+        height = float(message.text.replace(",", "."))
+        if height <= 0 or height > 500:
+            raise ValueError
+        await state.update_data(height=height)
+        await state.set_state(CalculatorState.waiting_glass)
+        data = await state.get_data()
+        width = data["width"]
+        area = (width * height) / 10000
+        await message.answer(f"Размеры: {width}x{height} см = {area:.2f} м2\n\nВыберите тип стеклопакета:", reply_markup=glass_menu())
+    except ValueError:
+        await message.answer("Введите корректное число (высота в см, например: 150)")
+
+@dp.callback_query(F.data.startswith("glass_"))
+async def process_glass(callback: CallbackQuery, state: FSMContext):
+    glass_type = callback.data.replace("glass_", "")
+    await state.update_data(glass=glass_type, options=[])
+    await state.set_state(CalculatorState.waiting_options)
+    glass_names = {"single": "Одинарный", "double": "Двойной", "triple": "Тройной"}
+    await callback.message.edit_text(f"Стеклопакет: {glass_names.get(glass_type, glass_type)}\n\nВыберите дополнительные опции (можно несколько):", reply_markup=options_menu())
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("opt_"))
+async def process_options(callback: CallbackQuery, state: FSMContext):
+    opt = callback.data.replace("opt_", "")
+    data = await state.get_data()
+    options = data.get("options", [])
+    if opt == "done":
+        await calculate_final(callback, state)
+        return
+    if opt in options:
+        options.remove(opt)
+    else:
+        options.append(opt)
+    await state.update_data(options=options)
+    opt_names = {"mosquito": "Москитная сетка", "sill": "Подоконник", "install": "Монтаж"}
+    selected = "\n".join([f"+ {opt_names.get(o, o)}" for o in options]) if options else "Ничего не выбрано"
+    await callback.message.edit_text(f"Калькулятор\n\nВыбранные опции:\n{selected}\n\nДобавьте еще или нажмите Готово:", reply_markup=options_menu())
+    await callback.answer()
+
+async def calculate_final(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    type_key = data["construction_type"]
+    width = data["width"]
+    height = data["height"]
+    glass = data["glass"]
+    options = data.get("options", [])
+    price_data = PRICES[type_key]
+    area = (width * height) / 10000
+    base_cost = price_data["base"] * area
+    glass_cost = price_data[glass] * area
+    options_cost = 0
+    opt_details = []
+    opt_names = {
+        "mosquito": ("Москитная сетка", price_data["mosquito"]),
+        "sill": ("Подоконник", price_data["sill"]),
+        "install": ("Монтаж", price_data["install"])
+    }
+    for opt in options:
+        if opt in opt_names and price_data[opt] > 0:
+            name, cost = opt_names[opt]
+            options_cost += cost
+            opt_details.append(f"{name}: {cost:,} сум")
+    total = base_cost + glass_cost + options_cost
+    result_text = f"""РАСЧЕТ СТОИМОСТИ
+
+Размеры: {width}x{height} см = {area:.2f} м2
+Тип: {price_data["name"]}
+
+Детализация:
+- Базовая стоимость: {base_cost:,.0f} сум
+- Стеклопакет ({glass}): {glass_cost:,.0f} сум
+"""
+    if opt_details:
+        result_text += "\n".join([f"- {d}" for d in opt_details]) + "\n"
+    result_text += f"""
+
+ИТОГО: {total:,.0f} сум
+
+Цена ориентировочная. Точная стоимость после замера.
+
+Хотите оставить заявку на замер?"""
+    order_kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Оставить заявку", callback_data="order_from_calc")],
+        [InlineKeyboardButton(text="Новый расчет", callback_data="calc")],
+        [InlineKeyboardButton(text="Главное меню", callback_data="main_menu")]
+    ])
+    await callback.message.edit_text(result_text, reply_markup=order_kb)
+    await callback.answer()
+
+@dp.callback_query(F.data == "catalog")
+async def process_catalog(callback: CallbackQuery):
+    await callback.message.edit_text("Каталог продукции Akfa\n\nВыберите категорию:", reply_markup=catalog_menu())
+    await callback.answer()
+
+@dp.callback_query(F.data == "cat_plastic")
+async def process_cat_plastic(callback: CallbackQuery):
+    text = """Пластиковые окна Akfa
+
+Профильная система: Akfa 70 мм
+Толщина стенок: 2.5 мм
+Стеклопакет: до 32 мм
+Фурнитура: Турция/Германия
+Уплотнитель: EPDM (3 контура)
+
+Цена: от 650 000 сум/м2
+
+В комплекте:
+- Подоконник
+- Отлив
+- Ручка
+- Фиксатор
+
+Звоните для консультации!"""
+    await callback.message.edit_text(text, reply_markup=back_to_main())
+    await callback.answer()
+
+@dp.callback_query(F.data == "cat_aluminum")
+async def process_cat_aluminum(callback: CallbackQuery):
+    text = """Алюминиевые окна Akfa
+
+Система: Akfa BKT-70 / BKT-77
+Толщина профиля: 1.4-2.0 мм
+Порошковое покрытие
+Терморазрыв (опционально)
+Любые цвета по RAL
+
+Цена: от 750 000 сум/м2
+
+Идеально для:
+- Офисов
+- Магазинов
+- Витражей
+- Балконов
+
+Звоните для консультации!"""
+    await callback.message.edit_text(text, reply_markup=back_to_main())
+    await callback.answer()
+
+@dp.callback_query(F.data == "cat_doors")
+async def process_cat_doors(callback: CallbackQuery):
+    text = """Двери Akfa
+
+Пластиковые двери:
+Профиль: Akfa 70 мм
+Усиленная фурнитура
+Замок с ручкой
+от 700 000 сум/м2
+
+Алюминиевые двери:
+Система: BKT-70
+Стекло: 6-10 мм закаленное
+Доводчик (опционально)
+Любой цвет
+от 850 000 сум/м2
+
+Звоните для консультации!"""
+    await callback.message.edit_text(text, reply_markup=back_to_main())
+    await callback.answer()
+
+@dp.callback_query(F.data == "portfolio")
+async def process_portfolio(callback: CallbackQuery):
+    text = """Наши работы
+
+Мы установили более 500 окон и дверей в Навои и области!
+
+Типы объектов:
+- Квартиры и частные дома
+- Офисы и магазины
+- Школы и больницы
+- Промышленные объекты
+
+Смотрите фото в нашем Instagram:
+[ссылка на Instagram]
+
+Видео процесса монтажа в Stories!
+
+Хотите увидеть работы по вашему району? Напишите нам!"""
+    await callback.message.edit_text(text, reply_markup=back_to_main())
+    await callback.answer()
+
+@dp.callback_query(F.data == "contacts")
+async def process_contacts(callback: CallbackQuery):
+    text = """Наши контакты
+
+uniRom
+Навои, Узбекистан
+Телефон: +998 XX XXX XX XX
+Telegram: @username
+Email: info@unirom.uz
+
+Режим работы:
+Пн-Пт: 9:00 - 18:00
+Сб: 9:00 - 15:00
+Вс: Выходной
+
+Uzum Nasiya:
+Рассрочка до 12 месяцев!
+
+Доставка:
+Бесплатно по Навои
+В область - по договоренности
+
+Адрес офиса:
+[указать адрес]
+
+Локация:
+[ссылка на 2GIS/Google Maps]"""
+    await callback.message.edit_text(text, reply_markup=back_to_main())
+    await callback.answer()
+
+@dp.callback_query(F.data == "faq")
+async def process_faq(callback: CallbackQuery):
+    text = """Частые вопросы
+
+Q: Сколько времени занимает изготовление?
+A: Стандартный заказ - 7-14 рабочих дней.
+
+Q: Есть ли гарантия?
+A: Да, гарантия на профиль и стеклопакет - 5 лет. На монтаж - 2 года.
+
+Q: Можно ли в рассрочку?
+A: Да! Рассрочка через Uzum Nasiya до 12 месяцев.
+
+Q: Делаете ли замер бесплатно?
+A: Да, замер и консультация бесплатно в Навои.
+
+Q: Какие стеклопакеты лучше?
+A: Для квартир рекомендуем двойной (энергосбережение). Для офисов - одинарный.
+
+Q: Работаете ли в области?
+A: Да, выезжаем в Кызылкум, Канимех, Учкудук и другие районы.
+
+Есть другой вопрос? Напишите нам!"""
+    await callback.message.edit_text(text, reply_markup=back_to_main())
+    await callback.answer()
+
+@dp.callback_query(F.data == "order")
+async def process_order(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(OrderState.waiting_name)
+    await callback.message.edit_text("Оставить заявку\n\nВведите ваше имя:")
+    await callback.answer()
+
+@dp.callback_query(F.data == "order_from_calc")
+async def process_order_from_calc(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    calc_data = f"""
+Размеры: {data.get('width')}x{data.get('height')} см
+Тип: {PRICES[data.get('construction_type')]['name']}
+Стеклопакет: {data.get('glass')}
+"""
+    await state.update_data(calc_summary=calc_data)
+    await state.set_state(OrderState.waiting_name)
+    await callback.message.edit_text(f"Оставить заявку\n\nВаш расчет:\n{calc_data}\nВведите ваше имя:")
+    await callback.answer()
+
+@dp.message(OrderState.waiting_name)
+async def process_order_name(message: Message, state: FSMContext):
+    await state.update_data(name=message.text)
+    await state.set_state(OrderState.waiting_phone)
+    await message.answer("Введите ваш номер телефона (например: +998901234567):")
+
+@dp.message(OrderState.waiting_phone)
+async def process_order_phone(message: Message, state: FSMContext):
+    phone = message.text
+    if not phone.startswith("+") or len(phone) < 10:
+        await message.answer("Введите номер в формате +998901234567")
+        return
+    await state.update_data(phone=phone)
+    await state.set_state(OrderState.waiting_address)
+    await message.answer("Введите адрес (город, район, улица, дом):")
+
+@dp.message(OrderState.waiting_address)
+async def process_order_address(message: Message, state: FSMContext):
+    await state.update_data(address=message.text)
+    await state.set_state(OrderState.waiting_details)
+    await message.answer("Опишите, что нужно установить (тип, количество, примечания):\n\nИли напишите Пропустить:")
+
+@dp.message(OrderState.waiting_details)
+async def process_order_details(message: Message, state: FSMContext):
+    details = message.text if message.text != "Пропустить" else "Не указано"
+    await state.update_data(details=details)
+    data = await state.get_data()
+    summary = f"""Проверьте заявку:
+
+Имя: {data['name']}
+Телефон: {data['phone']}
+Адрес: {data['address']}
+Детали: {data['details']}
+"""
+    if data.get('calc_summary'):
+        summary += f"\nРасчет: {data['calc_summary']}"
+    summary += "\n\nВсе верно?"
+    await message.answer(summary, reply_markup=order_confirm_menu())
+
+@dp.callback_query(F.data == "order_confirm")
+async def process_order_confirm(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    admin_text = f"""НОВАЯ ЗАЯВКА!
+
+Имя: {data['name']}
+Телефон: {data['phone']}
+Адрес: {data['address']}
+Детали: {data['details']}
+"""
+    if data.get('calc_summary'):
+        admin_text += f"\nРасчет: {data['calc_summary']}"
+    await callback.message.edit_text("Заявка отправлена!\n\nМы свяжемся с вами в течение 30 минут.\nСпасибо за обращение!", reply_markup=back_to_main())
+    await state.clear()
+    await callback.answer()
+
+@dp.message()
+async def handle_unknown(message: Message):
+    await message.answer("Я не понял команду. Используйте меню ниже", reply_markup=main_menu())
+
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())

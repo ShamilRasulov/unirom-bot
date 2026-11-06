@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ILUMA i — гид по устройствам</title>
+  <meta name="description" content="Неофициальный информационный гид по линейке устройств ILUMA i и стикам TEREA для совершеннолетних пользователей в Узбекистане.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Возрастной фильтр 21+ -->
+  <div class="age-gate" id="ageGate" role="dialog" aria-modal="true" aria-labelledby="ageTitle">
+    <div class="age-card">
+      <h2 id="ageTitle">Вам исполнился 21 год?</h2>
+      <p>Информация на сайте предназначена только для совершеннолетних лиц, достигших 21 года и употребляющих табачную или никотинсодержащую продукцию.</p>
+      <div class="age-actions">
+        <button class="btn btn-primary" id="ageYes">Да, мне 21+</button>
+        <button class="btn btn-ghost" id="ageNo">Нет</button>
+      </div>
+      <p class="age-denied" id="ageDenied" hidden>Извините, доступ к сайту ограничен.</p>
+    </div>
+  </div>
+
+  <div class="warning-bar">
+    Настоящий продукт не является безвредным и содержит никотин, который вызывает зависимость. Только для лиц, достигших возраста 21 года и старше.
+  </div>
+
+  <header class="header">
+    <div class="container header-inner">
+      <a href="#top" class="logo"><span class="logo-ring"></span>ILUMA&nbsp;i гид</a>
+      <button class="burger" id="burger" aria-label="Открыть меню" aria-expanded="false"><span></span><span></span><span></span></button>
+      <nav class="nav" id="nav">
+        <a href="#devices">Устройства</a>
+        <a href="#features">Умные функции</a>
+        <a href="#terea">Вкусы TEREA</a>
+        <a href="#accessories">Аксессуары</a>
+        <a href="#compare">Сравнение</a>
+        <a href="#faq">Вопросы</a>
+        <a href="#stores" class="nav-cta">Найти магазин</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container hero-inner">
+        <div class="hero-text">
+          <span class="eyebrow">Флагманская линейка</span>
+          <h1>ILUMA i — индивидуальный опыт в каждом сеансе</h1>
+          <p class="lead">Линейка устройств для тех, кто ценит современные технологии и комфорт в каждой детали: до 3 сеансов подряд без подзарядки*, интеллектуальные функции и усовершенствованный дизайн.</p>
+          <div class="hero-actions">
+            <a href="#devices" class="btn btn-primary">Выбрать устройство</a>
+            <a href="#features" class="btn btn-ghost">Умные функции</a>
+          </div>
+          <p class="footnote">*Только в режиме «Производительность» при отключённой функции Паузы.</p>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="device-art">
+            <div class="art-charger"></div>
+            <div class="art-holder"><span class="art-screen"></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="container stats">
+        <div class="stat"><b>3</b><span>модели в линейке</span></div>
+        <div class="stat"><b>5</b><span>умных функций</span></div>
+        <div class="stat"><b>13</b><span>вкусов TEREA</span></div>
+        <div class="stat"><b>6 мин</b><span>или 14 затяжек — сеанс</span></div>
+      </div>
+    </section>
+
+    <!-- DEVICES -->
+    <section class="section" id="devices">
+      <div class="container">
+        <div class="section-head">
+          <h2>Устройства</h2>
+          <p>Выберите модель, чтобы узнать подробнее о её возможностях.</p>
+        </div>
+        <div class="tabs" role="tablist" id="deviceTabs"></div>
+        <div class="device-panel" id="devicePanel"></div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="section section-alt" id="features">
+      <div class="container">
+        <div class="section-head">
+          <h2>Умные функции ⚙️</h2>
+          <p>Ещё больше возможностей в сравнении с предыдущими поколениями устройств. Нажмите на функцию, чтобы узнать больше.</p>
+        </div>
+        <div class="feature-grid" id="featureGrid"></div>
+      </div>
+    </section>
+
+    <!-- TEREA -->
+    <section class="section" id="terea">
+      <div class="container">
+        <div class="section-head">
+          <h2>Коллекция вкусов TEREA</h2>
+          <p>В ассортименте TEREA — 13 вкусов, от насыщенного вкуса табака до выразительно ягодных и цитрусовых нот. Каждый выбирает по-своему: по привычке, под настроение или просто по ощущениям.</p>
+        </div>
+        <div class="filters" id="tereaFilters" role="group" aria-label="Фильтр вкусов">
+          <button class="chip active" data-filter="all">Все</button>
+          <button class="chip" data-filter="pearl">С капсулой (Pearl)</button>
+          <button class="chip" data-filter="menthol">С охлаждением</button>
+          <button class="chip" data-filter="tobacco">Табачные</button>
+        </div>
+        <div class="terea-grid" id="tereaGrid"></div>
+        <p class="footnote">Описания по результатам внутреннего тестирования лицами, прошедшими специальную подготовку по оценке вкусов и/или ароматов. Наличие и состав линейки уточняйте в официальных магазинах.</p>
+      </div>
+    </section>
+
+    <!-- ACCESSORIES -->
+    <section class="section section-alt" id="accessories">
+      <div class="container">
+        <div class="section-head">
+          <h2>Аксессуары</h2>
+          <p>Чехлы, крышки и кольца позволяют сделать устройство по-настоящему своим. Наличие товара можно уточнить в магазинах.</p>
+        </div>
+        <div class="acc-grid" id="accGrid"></div>
+      </div>
+    </section>
+
+    <!-- COMPARE -->
+    <section class="section" id="compare">
+      <div class="container">
+        <div class="section-head">
+          <h2>Сравнение моделей</h2>
+        </div>
+        <div class="table-wrap">
+          <table class="compare">
+            <thead>
+              <tr><th></th><th>ILUMA i PRIME</th><th>ILUMA i</th><th>ILUMA i ONE</th></tr>
+            </thead>
+            <tbody id="compareBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section section-alt" id="faq">
+      <div class="container narrow">
+        <div class="section-head">
+          <h2>Частые вопросы</h2>
+        </div>
+        <div class="faq" id="faqList"></div>
+      </div>
+    </section>
+
+    <!-- STORES -->
+    <section class="section" id="stores">
+      <div class="container">
+        <div class="store-card">
+          <div>
+            <h2>Найти магазин 📍</h2>
+            <p>Подходящее устройство и вкус можно найти в официальных магазинах и точках продаж. Актуальные адреса и часы работы смотрите на официальном сайте или в Telegram-боте.</p>
+          </div>
+          <div class="store-actions">
+            <a class="btn btn-primary" href="https://uz.iqos.com/ru" target="_blank" rel="noopener">Официальный сайт</a>
+            <a class="btn btn-ghost" href="https://t.me/" target="_blank" rel="noopener">Telegram-бот</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p><b>Неофициальный информационный сайт.</b> Не является сайтом производителя и не продаёт продукцию. Названия и товарные знаки принадлежат их правообладателям. Характеристики собраны из открытых источников и могут отличаться в зависимости от рынка — уточняйте в официальных магазинах.</p>
+      <p class="footer-warning">Настоящий продукт не является безвредным и содержит никотин, который вызывает зависимость. Только для лиц 21+. Лучшее решение для здоровья — полностью отказаться от табака и никотина.</p>
+    </div>
+  </footer>
+
+  <!-- Модальное окно функции -->
+  <div class="modal" id="modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="modal-close" data-close aria-label="Закрыть">×</button>
+      <div class="modal-icon" id="modalIcon"></div>
+      <h3 id="modalTitle"></h3>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
